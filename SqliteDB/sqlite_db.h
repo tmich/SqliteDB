@@ -25,6 +25,7 @@ namespace sqlite
 	{
 	public:
 		Cursor();
+		Cursor(sqlite3 * db, std::string query);
 		Cursor(sqlite3_stmt * stmt);
 		~Cursor();
 
@@ -35,6 +36,7 @@ namespace sqlite
 		double GetDouble(int columnIndex);
 	private:
 		sqlite3_stmt * stmt_;
+		sqlite3 * db_;
 	};
 
 	/* Classe che incapsula una transaction. */
@@ -67,13 +69,15 @@ namespace sqlite
 		void Open(std::string databaseName);
 		void Close();
 
+		operator sqlite3 * () const { return db_; }
+
 		/* Esegue il comando (INSERT, UPDATE, DELETE) e torna il numero di righe modificate. */
 		int Execute(std::string command);
 
 		/* Ritorna l'ultimo rowid creato */
 		long long int GetLastInsertRowid();
 
-		Cursor ExecuteQuery(std::string query);
+		//Cursor ExecuteQuery(std::string query);
 
 		Transaction BeginTransaction();
 	protected:

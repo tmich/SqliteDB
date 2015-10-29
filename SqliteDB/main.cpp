@@ -36,7 +36,7 @@ int main(char ** argv, int argc)
 		std::terminate();
 	}
 
-	auto crs = conn.ExecuteQuery("select id, title, year, price from album;");
+	Cursor crs(conn, std::string("select id, title, year, price from album;"));
 
 	std::vector<Album> albums;
 

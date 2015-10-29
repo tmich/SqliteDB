@@ -3,14 +3,15 @@
 using namespace sqlite;
 
 /*********************
- *	Connection
- *********************/
+*	Connection
+*********************/
 Connection::Connection()
 {
 }
 
 void Connection::Open(std::string databaseName)
 {
+	sqlite3_initialize();
 	int rc = sqlite3_open_v2(databaseName.c_str(), &db_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
 	if (SQLITE_OK != rc)
 	{
@@ -41,7 +42,7 @@ int Connection::Execute(std::string command)
 	}
 
 	int errcode = sqlite3_step(stmt);
-	
+
 	if (SQLITE_DONE != errcode)
 	{
 		throw SqliteException(sqlite3_errstr(errcode));
@@ -57,18 +58,18 @@ int Connection::Execute(std::string command)
 	return sqlite3_changes(db_);
 }
 
-Cursor Connection::ExecuteQuery(std::string query)
-{
-	sqlite3_stmt * stmt;
-	int rc = sqlite3_prepare_v2(db_, query.c_str(), query.size(), &stmt, nullptr);
-
-	if (SQLITE_OK != rc)
-	{
-		throw SqliteException(sqlite3_errstr(rc));
-	}
-
-	return Cursor(stmt);
-}
+//Cursor Connection::ExecuteQuery(std::string query)
+//{
+//	/*sqlite3_stmt * stmt;
+//	int rc = sqlite3_prepare_v2(db_, query.c_str(), query.size(), &stmt, nullptr);
+//
+//	if (SQLITE_OK != rc)
+//	{
+//	throw SqliteException(sqlite3_errstr(rc));
+//	}*/
+//
+//	return Cursor(db_, query);
+//}
 
 long long int Connection::GetLastInsertRowid()
 {
@@ -78,7 +79,7 @@ long long int Connection::GetLastInsertRowid()
 Transaction Connection::BeginTransaction()
 {
 	int rc = sqlite3_exec(db_, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
-	
+
 	if (SQLITE_OK != rc)
 	{
 		throw SqliteException(sqlite3_errstr(rc));
@@ -100,13 +101,24 @@ Cursor::Cursor()
 {
 }
 
-Cursor::Cursor(sqlite3_stmt * stmt) : stmt_(stmt)
+Cursor::Cursor(sqlite3 * db, std::string query) : db_{ db }
+{
+	int rc = sqlite3_prepare_v2(db_, query.c_str(), query.size(), &stmt_, nullptr);
+
+	if (SQLITE_OK != rc)
+	{
+		throw SqliteException(sqlite3_errstr(rc));
+	}
+}
+
+Cursor::Cursor(sqlite3_stmt * stmt) : stmt_{ stmt }
 {
 }
 
 bool Cursor::Next()
 {
-	return sqlite3_step(stmt_) == SQLITE_ROW;
+	auto rc = sqlite3_step(stmt_);
+	return rc == SQLITE_ROW;
 }
 
 int Cursor::GetInt(int columnIndex)
@@ -126,7 +138,9 @@ double Cursor::GetDouble(int columnIndex)
 
 Cursor::~Cursor()
 {
+	sqlite3_reset(stmt_);
 	sqlite3_finalize(stmt_);
+	stmt_ = nullptr;
 }
 
 /*********************
@@ -183,6 +197,6 @@ void Transaction::Rollback()
 
 Transaction::~Transaction()
 {
-	if(pending)
+	if (pending)
 		Rollback();
 }
