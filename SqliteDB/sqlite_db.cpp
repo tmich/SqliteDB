@@ -70,6 +70,11 @@ Cursor Connection::ExecuteQuery(std::string query)
 	return Cursor(stmt);
 }
 
+long long int Connection::GetLastInsertRowid()
+{
+	return sqlite3_last_insert_rowid(db_);
+}
+
 Transaction Connection::BeginTransaction()
 {
 	int rc = sqlite3_exec(db_, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);

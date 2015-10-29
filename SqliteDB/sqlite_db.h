@@ -67,6 +67,9 @@ namespace sqlite
 		/* Esegue il comando (INSERT, UPDATE, DELETE) e torna il numero di righe modificate. */
 		int Execute(std::string command);
 
+		/* Ritorna l'ultimo rowid creato */
+		long long int GetLastInsertRowid();
+
 		Cursor ExecuteQuery(std::string query);
 
 		Transaction BeginTransaction();
