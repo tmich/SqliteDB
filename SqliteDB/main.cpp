@@ -24,9 +24,9 @@ int main(char ** argv, int argc)
 		trn.Execute("insert into album (title, year, price) values ('Un biglietto del tram', 1975, 9.90);");
 		std::cout << "Ultimo id inserito: " << conn.GetLastInsertRowid() << std::endl;
 		trn.Execute("insert into album (title, year, price) values ('Storia di un minuto', 1973, 8.80);");
-		std::cout << "Ultimo id inserito: " << conn.GetLastInsertRowid() << std::endl;
+		std::cout << "Ultimo id inserito: " << trn.GetLastInsertRowid() << std::endl;
 		trn.Execute("insert into album (title, year, price) values ('The lamb lies down on Broadway', 1974, 12);");
-		std::cout << "Ultimo id inserito: " << conn.GetLastInsertRowid() << std::endl;
+		std::cout << "Ultimo id inserito: " << trn.GetLastInsertRowid() << std::endl;
 		trn.Commit();
 	}
 	catch (SqliteException& exc)

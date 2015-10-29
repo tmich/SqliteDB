@@ -164,6 +164,11 @@ int Transaction::Execute(std::string command)
 	return sqlite3_changes(db_);
 }
 
+long long int Transaction::GetLastInsertRowid()
+{
+	return sqlite3_last_insert_rowid(db_);
+}
+
 void Transaction::Commit()
 {
 	sqlite3_exec(db_, "COMMIT TRANSACTION", nullptr, nullptr, nullptr);
