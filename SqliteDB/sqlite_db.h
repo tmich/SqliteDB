@@ -6,6 +6,7 @@
 
 namespace sqlite
 {
+	/* Eccezione SQLite */
 	class SqliteException : public std::exception
 	{
 	public:
@@ -19,6 +20,7 @@ namespace sqlite
 		std::string message_;
 	};
 
+	/* Classe che incapsula un cursore restituito da una query */
 	class Cursor
 	{
 	public:
@@ -27,12 +29,15 @@ namespace sqlite
 		~Cursor();
 
 		bool Next();
+
 		int GetInt(int columnIndex);
 		std::string GetText(int columnIndex);
+		double GetDouble(int columnIndex);
 	private:
 		sqlite3_stmt * stmt_;
 	};
 
+	/* Classe che incapsula una transaction. */
 	class Transaction
 	{
 	public:
@@ -41,12 +46,15 @@ namespace sqlite
 
 		void Commit();
 		void Rollback();
+
+		/* Esegue il comando (INSERT, UPDATE, DELETE) e torna il numero di righe modificate. */
 		int Execute(std::string command);
 	protected:
 		bool pending;
 		sqlite3 * db_;
 	};
 
+	/* Classe che incapsula una connessione al db (RAII) */
 	class Connection
 	{
 	public:
@@ -56,7 +64,7 @@ namespace sqlite
 		void Open(std::string databaseName);
 		void Close();
 
-		/* Executes NON-QUERY command */
+		/* Esegue il comando (INSERT, UPDATE, DELETE) e torna il numero di righe modificate. */
 		int Execute(std::string command);
 
 		Cursor ExecuteQuery(std::string query);

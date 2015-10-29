@@ -2,9 +2,9 @@
 
 using namespace sqlite;
 
-/*
+/*********************
  *	Connection
- */
+ *********************/
 Connection::Connection()
 {
 }
@@ -21,6 +21,12 @@ void Connection::Open(std::string databaseName)
 void Connection::Close()
 {
 	int rc = sqlite3_close_v2(db_);
+
+	if (SQLITE_OK != rc)
+	{
+		throw SqliteException(sqlite3_errstr(rc));
+	}
+
 	db_ = nullptr;
 }
 
@@ -48,7 +54,7 @@ int Connection::Execute(std::string command)
 		throw SqliteException(sqlite3_errstr(rf));
 	}
 
-	return rf;
+	return sqlite3_changes(db_);
 }
 
 Cursor Connection::ExecuteQuery(std::string query)
@@ -67,6 +73,12 @@ Cursor Connection::ExecuteQuery(std::string query)
 Transaction Connection::BeginTransaction()
 {
 	int rc = sqlite3_exec(db_, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+	
+	if (SQLITE_OK != rc)
+	{
+		throw SqliteException(sqlite3_errstr(rc));
+	}
+
 	return Transaction{ db_ };
 }
 
@@ -75,9 +87,9 @@ Connection::~Connection()
 	Close();
 }
 
-/*
+/*******************
 *	Cursor
-*/
+********************/
 
 Cursor::Cursor()
 {
@@ -102,14 +114,19 @@ std::string Cursor::GetText(int columnIndex)
 	return std::string(reinterpret_cast<const char *>(sqlite3_column_text(stmt_, columnIndex)));
 }
 
+double Cursor::GetDouble(int columnIndex)
+{
+	return sqlite3_column_double(stmt_, columnIndex);
+}
+
 Cursor::~Cursor()
 {
 	sqlite3_finalize(stmt_);
 }
 
-/*
+/*********************
 *	Transaction
-*/
+*********************/
 Transaction::Transaction(sqlite3 * db) : db_(db)
 {
 	pending = true;
@@ -139,7 +156,7 @@ int Transaction::Execute(std::string command)
 		throw SqliteException(sqlite3_errstr(rf));
 	}
 
-	return rf;
+	return sqlite3_changes(db_);
 }
 
 void Transaction::Commit()
