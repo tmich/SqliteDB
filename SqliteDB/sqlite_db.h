@@ -3,9 +3,32 @@
 #include "sqlite3.h"
 #include <exception>
 #include <string>
+//#include <mutex>
+#include <Windows.h>
 
 namespace sqlite
 {
+	/* classe per gestire l'accesso concorrente al Database */
+	/*static std::mutex mutex_;
+
+	class LockDB
+	{
+	public:
+	LockDB() {}
+
+	void Acquire() {
+	mutex_.lock();
+	OutputDebugString(L"lock acquisito\n");
+	}
+
+	void Release() {
+	mutex_.unlock();
+	OutputDebugString(L"lock rilasciato\n");
+	}
+
+	~LockDB() { }
+	};*/
+
 	/* Eccezione SQLite */
 	class SqliteException : public std::exception
 	{
@@ -37,6 +60,7 @@ namespace sqlite
 	private:
 		sqlite3_stmt * stmt_;
 		sqlite3 * db_;
+		//std::mutex mutex_;
 	};
 
 	/* Classe che incapsula una transaction. */
@@ -82,5 +106,6 @@ namespace sqlite
 		Transaction BeginTransaction();
 	protected:
 		sqlite3 * db_{ nullptr };
+		//std::mutex mutex;
 	};
 }

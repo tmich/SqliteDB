@@ -1,4 +1,5 @@
 #include "sqlite_db.h"
+#include <Windows.h>
 
 using namespace sqlite;
 
@@ -12,11 +13,12 @@ Connection::Connection()
 void Connection::Open(std::string databaseName)
 {
 	sqlite3_initialize();
-	int rc = sqlite3_open_v2(databaseName.c_str(), &db_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+	int rc = sqlite3_open_v2(databaseName.c_str(), &db_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, nullptr);
 	if (SQLITE_OK != rc)
 	{
 		throw SqliteException(sqlite3_errstr(rc));
 	}
+	OutputDebugString(L"Connessione aperta\n");
 }
 
 void Connection::Close()
@@ -29,10 +31,12 @@ void Connection::Close()
 	}
 
 	db_ = nullptr;
+	OutputDebugString(L"Connessione chiusa\n");
 }
 
 int Connection::Execute(std::string command)
 {
+	//mutex.lock();
 	sqlite3_stmt * stmt;
 	int rc = sqlite3_prepare_v2(db_, command.c_str(), command.size(), &stmt, nullptr);
 
@@ -56,6 +60,7 @@ int Connection::Execute(std::string command)
 	}
 
 	return sqlite3_changes(db_);
+	//mutex.unlock();
 }
 
 //Cursor Connection::ExecuteQuery(std::string query)
@@ -99,6 +104,7 @@ Connection::~Connection()
 
 Cursor::Cursor()
 {
+
 }
 
 Cursor::Cursor(sqlite3 * db, std::string query) : db_{ db }
@@ -117,6 +123,10 @@ Cursor::Cursor(sqlite3_stmt * stmt) : stmt_{ stmt }
 
 bool Cursor::Next()
 {
+	wchar_t wstr[50];
+	swprintf_s(wstr, 50, L"\t\tCursor::Next, puntatore stmt_=%p\n", stmt_);
+	OutputDebugString(wstr);
+
 	auto rc = sqlite3_step(stmt_);
 	return rc == SQLITE_ROW;
 }
